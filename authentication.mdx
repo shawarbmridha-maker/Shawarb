@@ -1,0 +1,95 @@
+---
+title: "Authenticate with the Meetly API"
+sidebarTitle: "Authentication"
+description: "Meetly uses API key authentication. Learn how to generate keys, pass them in requests, and handle authentication errors."
+---
+
+Meetly authenticates all API requests using API keys passed in the `Authorization` header. Every request you make to the Meetly API must include a valid key — requests without one are rejected immediately, before any business logic runs.
+
+## Getting Your API Key
+
+You generate and manage API keys from the Meetly dashboard.
+
+1. Log in to your account at [app.meetly.ai](https://app.meetly.ai).
+2. Navigate to **Settings → API Keys**.
+3. Click **Create new key**, give it a descriptive name, and click **Generate**.
+4. Copy the key immediately — Meetly will **not** display it again after you close the dialog.
+
+Meetly issues two types of keys:
+
+| Prefix | Environment | Use for |
+|---|---|---|
+| `mk_live_` | Production | Live data and real workflows |
+| `mk_test_` | Testing | Development and experimentation |
+
+Always use a `mk_test_` key while building so you don't affect production data.
+
+## Using Your API Key
+
+Pass your API key in the `Authorization` header of every request, using the `Bearer` scheme.
+
+<CodeGroup>
+  ```bash curl
+  curl https://api.meetly.ai/v1/meetings \
+    -H "Authorization: Bearer YOUR_API_KEY"
+  ```
+
+  ```python Python
+  import requests
+
+  API_KEY = "YOUR_API_KEY"
+
+  response = requests.get(
+      "https://api.meetly.ai/v1/meetings",
+      headers={
+          "Authorization": f"Bearer {API_KEY}",
+      },
+  )
+
+  print(response.json())
+  ```
+
+  ```javascript JavaScript
+  const API_KEY = process.env.MEETLY_API_KEY;
+
+  const response = await fetch("https://api.meetly.ai/v1/meetings", {
+    headers: {
+      Authorization: `Bearer ${API_KEY}`,
+    },
+  });
+
+  const data = await response.json();
+  console.log(data);
+  ```
+</CodeGroup>
+
+## API Key Best Practices
+
+<Note>
+  Treat your API keys like passwords. Follow these practices to keep your account and data secure:
+
+  - **Never commit keys to source control.** Avoid hardcoding keys in your codebase or checking them into Git. Use a `.gitignore`-d `.env` file or a secrets manager instead.
+  - **Use environment variables.** Load keys at runtime via `process.env.MEETLY_API_KEY` (JavaScript) or `os.environ["MEETLY_API_KEY"]` (Python) so they stay out of your code.
+  - **Rotate keys regularly.** Periodically generate new keys and revoke old ones to limit the blast radius of an accidental leak.
+  - **Use test keys (`mk_test_`) for development.** Reserve `mk_live_` keys for production systems only.
+</Note>
+
+## Authentication Errors
+
+When a request fails authentication, Meetly returns a JSON error body alongside the relevant HTTP status code.
+
+| Status code | Meaning | What to do |
+|---|---|---|
+| `401 Unauthorized` | Missing or invalid API key | Verify the key is correct, check that the `Authorization` header is present and uses the `Bearer` scheme, and confirm the key hasn't been revoked. |
+| `403 Forbidden` | Valid key but insufficient permissions | Check that your account plan supports the endpoint you're calling and that the key's scope includes the required permission. |
+| `429 Too Many Requests` | Rate limit exceeded | Back off and retry after the duration indicated in the `Retry-After` response header. See the rate limits section of the API reference for full details. |
+
+## Revoking Keys
+
+If a key is compromised or no longer needed, revoke it immediately from the dashboard.
+
+1. Navigate to **Settings → API Keys**.
+2. Find the key you want to revoke and click **Revoke**.
+3. Confirm the action in the dialog.
+
+Revoked keys stop working instantly. Any application still using a revoked key will begin receiving `401 Unauthorized` responses, so make sure you replace the key in all affected systems before revoking it.

@@ -1,0 +1,222 @@
+---
+title: "Summaries API — AI-Generated Meeting Summaries"
+sidebarTitle: "Summaries"
+description: "REST API reference for the Summaries resource. Generate, retrieve, and regenerate AI meeting summaries with optional custom prompts."
+---
+
+The Summaries API lets you generate, retrieve, and customize AI-generated meeting summaries programmatically. Each summary is derived from the meeting's transcript and includes a TL;DR, key topics, decisions made, and recommended next steps. You can supply a custom prompt to tailor the tone and structure of the output to your team's needs.
+
+---
+
+## Generate a Summary
+
+<api-endpoint method="POST" path="/v1/summaries" />
+
+Trigger AI summary generation for a completed meeting. The meeting must have an associated transcript with `status: "completed"` before you call this endpoint. If a summary already exists for the meeting, a new one will be generated and the old record replaced.
+
+### Request Body
+
+<ParamField body="meeting_id" type="string" required>
+  The ID of the meeting to summarize. The meeting must have a completed transcript. Example: `"mtg_01hx3k9p2w"`.
+</ParamField>
+
+<ParamField body="prompt" type="string">
+  An optional custom system prompt to shape the style, focus, or length of the summary. When omitted, Meetly uses its default summarization prompt. Example: `"Summarize this meeting in bullet points, focusing on engineering decisions and blockers."`.
+</ParamField>
+
+### Response Fields
+
+<ResponseField name="id" type="string">
+  Unique identifier for the generated summary. Example: `"sum_7ky1p0qz8m"`.
+</ResponseField>
+
+<ResponseField name="meeting_id" type="string">
+  ID of the meeting this summary was generated from.
+</ResponseField>
+
+<ResponseField name="tldr" type="string">
+  A concise one-to-three sentence overview of the entire meeting.
+</ResponseField>
+
+<ResponseField name="topics" type="array">
+  Array of strings representing the main topics discussed during the meeting.
+</ResponseField>
+
+<ResponseField name="decisions" type="array">
+  Array of strings describing key decisions that were reached during the meeting.
+</ResponseField>
+
+<ResponseField name="next_steps" type="array">
+  Array of strings describing agreed-upon next steps or follow-up tasks.
+</ResponseField>
+
+<ResponseField name="generated_at" type="string">
+  ISO 8601 timestamp of when the summary was generated.
+</ResponseField>
+
+### Example
+
+<CodeGroup>
+
+```bash Default prompt
+curl --request POST \
+  --url https://api.meetly.ai/v1/summaries \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "meeting_id": "mtg_01hx3k9p2w"
+  }'
+```
+
+```bash Custom prompt
+curl --request POST \
+  --url https://api.meetly.ai/v1/summaries \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "meeting_id": "mtg_01hx3k9p2w",
+    "prompt": "Summarize this meeting in bullet points, focusing on engineering decisions and blockers."
+  }'
+```
+
+```json Response
+{
+  "id": "sum_7ky1p0qz8m",
+  "meeting_id": "mtg_01hx3k9p2w",
+  "tldr": "The team aligned on Q3 priorities, agreed to ship the API redesign to production by January 22nd, and identified two open blockers that need resolution before the deploy.",
+  "topics": [
+    "Q3 roadmap priorities",
+    "API redesign status",
+    "Production deployment timeline",
+    "Open blockers"
+  ],
+  "decisions": [
+    "Target production deployment for the API redesign by January 22nd.",
+    "Defer the notification service refactor to Q4.",
+    "Alice will own the staging sign-off process."
+  ],
+  "next_steps": [
+    "Alice to complete staging sign-off by January 18th.",
+    "Bob to resolve the authentication edge case identified in ticket ENG-412.",
+    "Team to reconvene on January 20th for a pre-deploy check-in."
+  ],
+  "generated_at": "2024-01-15T09:12:03Z"
+}
+```
+
+</CodeGroup>
+
+---
+
+## Get a Summary
+
+<api-endpoint method="GET" path="/v1/summaries/{id}" />
+
+Retrieve a previously generated summary by its unique identifier.
+
+### Path Parameters
+
+<ParamField path="id" type="string" required>
+  The unique identifier of the summary to retrieve. Example: `"sum_7ky1p0qz8m"`.
+</ParamField>
+
+### Response Fields
+
+<ResponseField name="id" type="string">
+  Unique summary identifier.
+</ResponseField>
+
+<ResponseField name="meeting_id" type="string">
+  ID of the associated meeting.
+</ResponseField>
+
+<ResponseField name="tldr" type="string">
+  Concise overview of the meeting.
+</ResponseField>
+
+<ResponseField name="topics" type="array">
+  Array of main topics discussed.
+</ResponseField>
+
+<ResponseField name="decisions" type="array">
+  Array of decisions reached during the meeting.
+</ResponseField>
+
+<ResponseField name="next_steps" type="array">
+  Array of agreed next steps or follow-up tasks.
+</ResponseField>
+
+<ResponseField name="generated_at" type="string">
+  ISO 8601 timestamp of when the summary was generated.
+</ResponseField>
+
+### Example
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url https://api.meetly.ai/v1/summaries/sum_7ky1p0qz8m \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```
+
+```json Response
+{
+  "id": "sum_7ky1p0qz8m",
+  "meeting_id": "mtg_01hx3k9p2w",
+  "tldr": "The team aligned on Q3 priorities, agreed to ship the API redesign to production by January 22nd, and identified two open blockers that need resolution before the deploy.",
+  "topics": [
+    "Q3 roadmap priorities",
+    "API redesign status",
+    "Production deployment timeline",
+    "Open blockers"
+  ],
+  "decisions": [
+    "Target production deployment for the API redesign by January 22nd.",
+    "Defer the notification service refactor to Q4.",
+    "Alice will own the staging sign-off process."
+  ],
+  "next_steps": [
+    "Alice to complete staging sign-off by January 18th.",
+    "Bob to resolve the authentication edge case identified in ticket ENG-412.",
+    "Team to reconvene on January 20th for a pre-deploy check-in."
+  ],
+  "generated_at": "2024-01-15T09:12:03Z"
+}
+```
+
+</CodeGroup>
+
+---
+
+## Delete a Summary
+
+<api-endpoint method="DELETE" path="/v1/summaries/{id}" />
+
+Permanently delete a summary record. This action is irreversible — if you need a summary for this meeting again, you must call `POST /v1/summaries` to generate a new one.
+
+### Path Parameters
+
+<ParamField path="id" type="string" required>
+  The unique identifier of the summary to delete. Example: `"sum_7ky1p0qz8m"`.
+</ParamField>
+
+### Response
+
+Returns `204 No Content` on success with an empty response body.
+
+### Example
+
+<CodeGroup>
+
+```bash cURL
+curl --request DELETE \
+  --url https://api.meetly.ai/v1/summaries/sum_7ky1p0qz8m \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```
+
+</CodeGroup>
+
+<Note>
+  Deleting a summary does not affect the underlying transcript or any action items extracted from the meeting. Only the summary record itself is removed.
+</Note>

@@ -1,0 +1,57 @@
+---
+title: "Calendar Integration: Sync Meetings Automatically"
+sidebarTitle: "Calendar"
+description: "Connect Meetly to Google Calendar or Outlook to automatically detect, join, and transcribe scheduled meetings without manual setup."
+---
+
+Meetly integrates with your calendar to automatically detect upcoming meetings, join them at the scheduled time, and start transcription — no manual intervention required. Once connected, your meetings flow through Meetly from invite to AI summary without any extra steps on your part.
+
+## Supported Calendars
+
+Meetly supports the two most widely used calendar platforms:
+
+- **Google Calendar** — personal and Workspace accounts
+- **Microsoft Outlook** — Office 365 and Microsoft 365 accounts
+
+## Connecting Your Calendar
+
+<Steps>
+  <Step title="Open Integrations in Settings">
+    Go to **Settings → Integrations** in the Meetly dashboard.
+  </Step>
+  <Step title="Connect your calendar provider">
+    Click **Connect** next to Google Calendar or Outlook, depending on which platform you use.
+  </Step>
+  <Step title="Authorize calendar access">
+    Complete the OAuth authorization flow. Meetly requests read access to your calendar events so it can detect scheduled meetings.
+  </Step>
+  <Step title="Choose calendars to sync">
+    Select which calendars Meetly should monitor. You can include or exclude specific calendars — for example, sync your work calendar but not your personal one.
+  </Step>
+  <Step title="Configure auto-join settings">
+    Choose your preferred auto-join behavior: join all meetings, only meetings that include a video conferencing link, or configure a custom rule. You can change this at any time.
+  </Step>
+</Steps>
+
+## Auto-Join Settings
+
+You control exactly when Meetly joins your calls. The following options are available under **Settings → Integrations → Auto-Join**:
+
+- **Always auto-join** — Meetly joins every meeting on your synced calendars that has a video link.
+- **Only when you're the organizer** — Meetly joins only meetings you created, leaving meetings organized by others untouched.
+- **Only when Meetly is explicitly invited** — Add Meetly as an invitee on a per-meeting basis for full manual control.
+- **Never (manual only)** — Disable auto-join entirely and start Meetly manually from the dashboard for each call.
+
+## Meeting Bot
+
+Meetly uses a meeting bot to join video calls on your behalf. The bot connects to Zoom, Google Meet, and Microsoft Teams and begins capturing audio as soon as it enters the call. Transcription and AI processing happen in real time.
+
+The bot appears as **"Meetly"** in the participant list, just like any other attendee. It does not require you to share your screen or install a plugin — it joins as a standalone participant.
+
+<Note>
+  Participants will see "Meetly" in the call. We recommend informing participants that the meeting is being recorded and transcribed, both as a courtesy and to comply with applicable recording consent laws in your region.
+</Note>
+
+## Disconnecting a Calendar
+
+To remove a connected calendar, go to **Settings → Integrations**, find the calendar you want to disconnect, and click **Disconnect**. Meetly will immediately stop syncing events from that calendar and will no longer auto-join meetings from it. Your existing transcripts and summaries are not affected.

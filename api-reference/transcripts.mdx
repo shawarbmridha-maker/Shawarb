@@ -1,0 +1,181 @@
+---
+title: "Transcripts API — Retrieve Meeting Transcriptions"
+sidebarTitle: "Transcripts"
+description: "REST API reference for the Transcripts resource. Retrieve full transcripts with speaker segments, timestamps, and word-level data."
+---
+
+The Transcripts API provides access to the full text of your meeting transcriptions, including speaker labels, timestamps, and segment-level detail. Transcripts are created automatically when you start transcription via the Meetings API and can be retrieved as structured JSON or exported to a variety of subtitle and text formats.
+
+---
+
+## Get a Transcript
+
+<api-endpoint method="GET" path="/v1/transcripts/{id}" />
+
+Retrieve the full transcript for a completed transcription job. The response includes every spoken segment with its associated speaker label, start and end timestamps, and the transcribed text.
+
+### Path Parameters
+
+<ParamField path="id" type="string" required>
+  The unique identifier of the transcript to retrieve. Example: `"tr_09gx2n5a3b"`.
+</ParamField>
+
+### Response Fields
+
+<ResponseField name="id" type="string">
+  Unique identifier for the transcript. Example: `"tr_09gx2n5a3b"`.
+</ResponseField>
+
+<ResponseField name="meeting_id" type="string">
+  ID of the meeting this transcript belongs to.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Transcription status. One of `queued`, `processing`, or `completed`.
+</ResponseField>
+
+<ResponseField name="language" type="string">
+  BCP-47 language code detected or specified for this transcript. Example: `"en"`.
+</ResponseField>
+
+<ResponseField name="segments" type="array">
+  Ordered array of spoken segments. Each segment represents a continuous utterance by a single speaker.
+
+  <ResponseField name="speaker" type="string">
+    Speaker label assigned by Meetly's diarization model. Example: `"Speaker 1"`.
+  </ResponseField>
+
+  <ResponseField name="start_ms" type="integer">
+    Start time of the segment in milliseconds from the beginning of the audio. Example: `3200`.
+  </ResponseField>
+
+  <ResponseField name="end_ms" type="integer">
+    End time of the segment in milliseconds from the beginning of the audio. Example: `7850`.
+  </ResponseField>
+
+  <ResponseField name="text" type="string">
+    Transcribed text for this segment. Example: `"Let's kick things off with a quick status update."`.
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="word_count" type="integer">
+  Total number of words across all segments in the transcript.
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp of when the transcript was created.
+</ResponseField>
+
+### Example
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url https://api.meetly.ai/v1/transcripts/tr_09gx2n5a3b \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```
+
+```json Response
+{
+  "id": "tr_09gx2n5a3b",
+  "meeting_id": "mtg_01hx3k9p2w",
+  "status": "completed",
+  "language": "en",
+  "segments": [
+    {
+      "speaker": "Speaker 1",
+      "start_ms": 1200,
+      "end_ms": 5800,
+      "text": "Good morning everyone. Let's kick things off with a quick status update."
+    },
+    {
+      "speaker": "Speaker 2",
+      "start_ms": 6100,
+      "end_ms": 12400,
+      "text": "Sure. We finished the API redesign last Thursday and it's already in staging."
+    },
+    {
+      "speaker": "Speaker 1",
+      "start_ms": 12900,
+      "end_ms": 18600,
+      "text": "Great. Can we target a production deploy by end of next week?"
+    }
+  ],
+  "word_count": 482,
+  "created_at": "2024-01-15T09:04:47Z"
+}
+```
+
+</CodeGroup>
+
+---
+
+## Export a Transcript
+
+<api-endpoint method="GET" path="/v1/transcripts/{id}/export" />
+
+Download the transcript in one of several portable formats. Use this endpoint to integrate Meetly transcripts into external tools, accessibility workflows, or archival pipelines.
+
+### Path Parameters
+
+<ParamField path="id" type="string" required>
+  The unique identifier of the transcript to export. Example: `"tr_09gx2n5a3b"`.
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="format" type="string">
+  Output format for the exported file. Accepted values:
+
+  | Value  | Description                                    |
+  |--------|------------------------------------------------|
+  | `json` | Structured JSON matching the Get Transcript response (default) |
+  | `txt`  | Plain text with speaker labels and timestamps  |
+  | `srt`  | SubRip subtitle format                         |
+  | `vtt`  | WebVTT subtitle format                         |
+
+  Defaults to `json`.
+</ParamField>
+
+### Response
+
+The response is a file download with the appropriate `Content-Type` header for the requested format:
+
+| Format | Content-Type              |
+|--------|---------------------------|
+| `json` | `application/json`        |
+| `txt`  | `text/plain`              |
+| `srt`  | `text/plain`              |
+| `vtt`  | `text/vtt`                |
+
+### Example
+
+<CodeGroup>
+
+```bash Download as SRT
+curl --request GET \
+  --url "https://api.meetly.ai/v1/transcripts/tr_09gx2n5a3b/export?format=srt" \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --output "q3-planning-sync.srt"
+```
+
+```bash Download as plain text
+curl --request GET \
+  --url "https://api.meetly.ai/v1/transcripts/tr_09gx2n5a3b/export?format=txt" \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --output "q3-planning-sync.txt"
+```
+
+```bash Download as VTT
+curl --request GET \
+  --url "https://api.meetly.ai/v1/transcripts/tr_09gx2n5a3b/export?format=vtt" \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --output "q3-planning-sync.vtt"
+```
+
+</CodeGroup>
+
+<Note>
+  Export requests for transcripts that are still in `processing` status will return a `409 Conflict` error. Poll `GET /v1/transcripts/{id}` until `status` is `"completed"` before attempting an export.
+</Note>

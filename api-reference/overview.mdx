@@ -1,0 +1,143 @@
+---
+title: "Meetly REST API Reference"
+sidebarTitle: "Overview"
+description: "Complete reference for the Meetly REST API. Covers base URL, authentication, request format, pagination, rate limits, and error codes."
+---
+
+The Meetly REST API gives you programmatic access to all of Meetly's features — create meetings, trigger transcription, fetch summaries, and manage action items. This reference covers everything you need to integrate Meetly into your application, from forming your first request to handling errors gracefully.
+
+## Base URL
+
+All API endpoints are relative to the following base URL:
+
+```
+https://api.meetly.ai/v1
+```
+
+For example, to list meetings, you would call `https://api.meetly.ai/v1/meetings`.
+
+## Request Format
+
+The Meetly API accepts JSON request bodies. Always include the `Content-Type: application/json` header when sending a request body. Here is a canonical example:
+
+```bash
+curl --request POST \
+  --url https://api.meetly.ai/v1/meetings \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "title": "Q3 Planning Session",
+    "scheduled_at": "2024-09-01T10:00:00Z",
+    "participants": ["alice@example.com", "bob@example.com"]
+  }'
+```
+
+<Note>
+  Requests that include a body but omit `Content-Type: application/json` will
+  return a `400 Bad Request` response.
+</Note>
+
+## Authentication
+
+All requests to the Meetly API require an API key passed as a Bearer token in the `Authorization` header:
+
+```
+Authorization: Bearer YOUR_API_KEY
+```
+
+Meetly issues two types of keys — production (`mk_live_`) and test (`mk_test_`). See the [Authentication reference](/api-reference/authentication) for the full details, including how to handle `401` and `403` errors.
+
+<Tip>
+  Use test keys (`mk_test_`) during development to avoid affecting production
+  data. Test keys operate in a sandboxed environment where no real operations
+  are performed.
+</Tip>
+
+## Rate Limits
+
+Meetly enforces per-minute rate limits based on your plan. If you exceed your limit, the API returns an HTTP `429` response with a `Retry-After` header indicating how many seconds to wait before retrying.
+
+| Plan         | Rate Limit            |
+| ------------ | --------------------- |
+| Free         | 100 requests / minute |
+| Pro          | 500 requests / minute |
+| Enterprise   | Custom — [contact sales](mailto:sales@meetly.ai) |
+
+<Warning>
+  Requests that exceed the rate limit are dropped entirely. Build retry logic
+  into your integration that respects the `Retry-After` header value.
+</Warning>
+
+## Pagination
+
+List endpoints use cursor-based pagination. You request a page by passing a `cursor` and a `limit` query parameter. The response always includes a `data` array, a `has_more` boolean, and a `next_cursor` string you can use to fetch the next page.
+
+**Example request**
+
+```bash
+curl --request GET \
+  --url "https://api.meetly.ai/v1/meetings?cursor=cur_abc123&limit=20" \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```
+
+**Example response**
+
+```json
+{
+  "data": [
+    { "id": "mtg_001", "title": "Weekly Standup" },
+    { "id": "mtg_002", "title": "Design Review" }
+  ],
+  "has_more": true,
+  "next_cursor": "cur_def456"
+}
+```
+
+When `has_more` is `false`, you have retrieved all available records. When `has_more` is `true`, pass the value of `next_cursor` as the `cursor` parameter in your next request to retrieve the following page.
+
+<Note>
+  The default page size is `20`. You can request up to `100` records per page
+  by setting `limit=100`.
+</Note>
+
+## Error Codes
+
+When a request fails, Meetly returns a structured JSON error response alongside an appropriate HTTP status code. The table below lists every error code you may encounter.
+
+| Error Code             | HTTP Status | Description                                                      |
+| ---------------------- | ----------- | ---------------------------------------------------------------- |
+| `authentication_failed`| 401         | API key missing or invalid                                       |
+| `forbidden`            | 403         | Insufficient permissions for this operation                      |
+| `not_found`            | 404         | Resource not found                                               |
+| `validation_error`     | 422         | Request body validation failed; check the `errors` field         |
+| `rate_limit_exceeded`  | 429         | Too many requests; wait and retry                                |
+| `internal_error`       | 500         | Unexpected server error; contact support                         |
+
+## Error Response Format
+
+Every error response follows the same JSON shape, making it straightforward to parse errors consistently across all endpoints.
+
+```json
+{
+  "error": {
+    "code": "not_found",
+    "message": "Meeting not found",
+    "details": {}
+  }
+}
+```
+
+<ResponseField name="error.code" type="string">
+  A machine-readable string identifying the error type. Use this field for
+  programmatic error handling.
+</ResponseField>
+
+<ResponseField name="error.message" type="string">
+  A human-readable description of what went wrong. Suitable for logging, but
+  do not display this string directly to end users.
+</ResponseField>
+
+<ResponseField name="error.details" type="object">
+  An optional object containing additional context. For `validation_error`
+  responses, this object includes field-level validation messages.
+</ResponseField>

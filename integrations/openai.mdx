@@ -1,0 +1,89 @@
+---
+title: "OpenAI Integration: Connect Your AI Models to Meetly"
+sidebarTitle: "OpenAI"
+description: "Meetly routes AI requests through the Helicone proxy for observability and control. Learn how to configure the OpenAI client with Meetly's endpoint."
+---
+
+Meetly's AI features are powered by OpenAI models, routed through the Helicone observability proxy at `https://oai.hconeai.com/v1`. This gives you full visibility into AI usage, costs, and performance — all without changing how you write AI-powered code.
+
+## How It Works
+
+Meetly proxies every OpenAI request through Helicone, which intercepts traffic between your application and OpenAI's API. Helicone logs each request, tracks token usage and costs, enforces rate limits, and surfaces performance metrics in its dashboard. If you are building on Meetly's API, this observability layer is inherited automatically — you do not need to configure anything extra to benefit from it.
+
+## Using the OpenAI Client with Meetly's Endpoint
+
+For developers building directly on top of Meetly's AI pipeline, configure the OpenAI client to point at the Helicone proxy and include the required authentication headers shown below.
+
+<CodeGroup>
+
+```python Python
+import os
+from openai import OpenAI
+
+HELICONE_API_KEY = os.environ["HELICONE_API_KEY"]
+
+client = OpenAI(
+    api_key="your-openai-api-key",
+    base_url="https://oai.hconeai.com/v1",
+    default_headers={
+        "Helicone-Auth": f"Bearer {HELICONE_API_KEY}",
+        "Helicone-Posthog-Key": "phc_tjQ8qsBPopAFLt9bwuxDAAnGWXJNBteVzFhXK7pwAPmD",
+        "Helicone-Posthog-Host": "https://us.i.posthog.com",
+    }
+)
+```
+
+```javascript JavaScript / TypeScript
+import OpenAI from "openai";
+
+const client = new OpenAI({
+  apiKey: "your-openai-api-key",
+  baseURL: "https://oai.hconeai.com/v1",
+  defaultHeaders: {
+    "Helicone-Auth": `Bearer ${process.env.HELICONE_API_KEY}`,
+    "Helicone-Posthog-Key": "phc_tjQ8qsBPopAFLt9bwuxDAAnGWXJNBteVzFhXK7pwAPmD",
+    "Helicone-Posthog-Host": "https://us.i.posthog.com",
+  },
+});
+```
+
+</CodeGroup>
+
+## Required Headers
+
+Every request to the Helicone proxy must include the following headers:
+
+| Header | Value | Description |
+|---|---|---|
+| `Helicone-Auth` | `Bearer <helicone_api_key>` | Required — authenticates with the Helicone proxy |
+| `Helicone-Posthog-Key` | PostHog project API key | Required — routes analytics events to your PostHog project |
+| `Helicone-Posthog-Host` | `https://us.i.posthog.com` | Required — PostHog host endpoint |
+
+## Environment Variables
+
+Store your credentials as environment variables rather than hardcoding them in your source code. This keeps secrets out of version control and makes it easy to rotate keys without touching your codebase.
+
+```bash
+export HELICONE_API_KEY="your-helicone-key"
+export OPENAI_API_KEY="your-openai-key"
+```
+
+Then read them in your application using `os.environ["HELICONE_API_KEY"]` (Python) or `process.env.HELICONE_API_KEY` (Node.js).
+
+<Note>
+  Your OpenAI API key and Helicone API key are separate credentials. Keep both secure and never expose them in client-side code.
+</Note>
+
+## Verifying the Connection
+
+After configuring the client, send a quick test request to confirm everything is wired up correctly. A successful response means Meetly is routing traffic through Helicone as expected.
+
+```python
+response = client.chat.completions.create(
+    model="gpt-4o",
+    messages=[{"role": "user", "content": "Say hello!"}]
+)
+print(response.choices[0].message.content)
+```
+
+If you receive a valid reply, your setup is complete. You can now verify the request appeared in your Helicone dashboard under **Requests** and in PostHog under **Events**.

@@ -1,0 +1,78 @@
+---
+title: "AI Meeting Summaries: What Meetly Generates"
+sidebarTitle: "Summaries"
+description: "Meetly automatically generates structured meeting summaries using AI. Learn about summary formats, customization options, and how to retrieve them."
+---
+
+After transcription, Meetly generates a structured summary using AI, giving your team a clear record of what was discussed and decided. Summaries are linked to the meeting and transcript, and they're available via the dashboard and API as soon as generation completes.
+
+## Summary Structure
+
+Every summary Meetly generates follows a consistent structure so your team always knows where to find the information they need.
+
+A summary always includes:
+
+- **TL;DR** — A short paragraph capturing the essence of the meeting in plain language.
+- **Key Topics** — A list of the main subjects discussed, each with a brief description.
+- **Decisions Made** — A list of conclusions or resolutions the team reached.
+- **Next Steps** — A list of follow-up actions and owners identified during the meeting.
+
+## Summary Object
+
+Here is a full example of a Summary object returned by the Meetly API.
+
+```json
+{
+  "id": "sum_09bj7r5x2dqf4u1m8nkw6yt3hv",
+  "meeting_id": "mtg_01hx9z3k7fqe2v8c4bnj6yd5rw",
+  "tldr": "The team aligned on Q3 priorities, agreed to delay the mobile launch by two weeks, and assigned owners for three critical workstreams.",
+  "topics": [
+    {
+      "title": "Q3 Roadmap Review",
+      "summary": "The team reviewed progress against the Q3 roadmap. Two features are on track; the mobile app launch is at risk due to a third-party SDK dependency."
+    },
+    {
+      "title": "Resource Allocation",
+      "summary": "Engineering headcount for Q3 was confirmed. One contractor will be brought on to support the backend team."
+    }
+  ],
+  "decisions": [
+    "Delay mobile app launch by two weeks to resolve the SDK dependency.",
+    "Approve budget for one additional contractor through end of Q3."
+  ],
+  "next_steps": [
+    "Alice to share updated timeline with stakeholders by Friday.",
+    "Ben to reach out to the SDK vendor for an ETA on the fix.",
+    "Priya to draft contractor job description and post by Monday."
+  ],
+  "generated_at": "2024-07-15T15:01:33Z"
+}
+```
+
+## Customizing Summaries
+
+You can tailor the style and focus of a summary by providing a custom system prompt when requesting generation. This lets you match the output to your audience — whether that's a formal executive brief or a quick, casual team update.
+
+To generate a summary with a custom prompt, send a `POST` request to `/v1/summaries`:
+
+```bash
+curl -X POST https://api.meetly.ai/v1/summaries \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "meeting_id": "mtg_abc",
+    "prompt": "Generate a formal executive summary focusing on decisions and risks."
+  }'
+```
+
+If you omit the `prompt` field, Meetly uses its default summarization prompt, which aims for a balanced, neutral tone suitable for most teams.
+
+## Regenerating Summaries
+
+You can regenerate a summary at any time by sending another `POST` request to `/v1/summaries` with the same `meeting_id` and a new `prompt`. Meetly creates a new Summary object rather than overwriting the existing one, so all previous versions are preserved and accessible via `GET /v1/summaries?meeting_id={meeting_id}`.
+
+This is useful when you need multiple formats of the same meeting — for example, a technical summary for the engineering team and a high-level briefing for leadership.
+
+<Note>
+  Summaries are generated within **60 seconds** of transcription completing on Pro and Enterprise plans. On the Free plan, summary generation may take up to 5 minutes depending on queue volume.
+</Note>

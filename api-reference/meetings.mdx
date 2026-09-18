@@ -1,0 +1,334 @@
+---
+title: "Meetings API — Create, List, and Manage Meetings"
+sidebarTitle: "Meetings"
+description: "REST API reference for the Meetings resource. Create meetings, list your history, update details, and trigger transcription."
+---
+
+The Meetings API lets you create and manage meeting records, retrieve past meetings, and kick off transcription for recorded audio. All endpoints require a valid API key passed as a Bearer token in the `Authorization` header.
+
+---
+
+## Create a Meeting
+
+<api-endpoint method="POST" path="/v1/meetings" />
+
+Create a new meeting record. You can optionally supply a scheduled time, a list of participants, and a URL pointing to an audio file if you want to trigger upload-based transcription.
+
+### Request Body
+
+<ParamField body="title" type="string" required>
+  A human-readable title for the meeting. Example: `"Q3 Planning Sync"`.
+</ParamField>
+
+<ParamField body="scheduled_at" type="string">
+  ISO 8601 timestamp for when the meeting is scheduled to occur. Example: `"2024-01-15T09:00:00Z"`.
+</ParamField>
+
+<ParamField body="participants" type="array">
+  A list of participant objects to associate with this meeting. Each object must include a `name` and `email`.
+
+  <ParamField body="name" type="string">
+    The participant's full name. Example: `"Alice Johnson"`.
+  </ParamField>
+
+  <ParamField body="email" type="string">
+    The participant's email address. Example: `"alice@example.com"`.
+  </ParamField>
+</ParamField>
+
+<ParamField body="audio_url" type="string">
+  A publicly accessible URL pointing to an audio file (`.mp3`, `.mp4`, `.wav`, `.m4a`). When provided, Meetly will automatically enqueue a transcription job after the meeting is created.
+</ParamField>
+
+### Response Fields
+
+<ResponseField name="id" type="string">
+  Unique identifier for the meeting. Example: `"mtg_01hx3k9p2w"`.
+</ResponseField>
+
+<ResponseField name="title" type="string">
+  The title you provided when creating the meeting.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Current meeting status. One of `scheduled`, `live`, `completed`, or `processing`.
+</ResponseField>
+
+<ResponseField name="scheduled_at" type="string">
+  ISO 8601 timestamp of the scheduled start time, or `null` if not set.
+</ResponseField>
+
+<ResponseField name="participants" type="array">
+  Array of participant objects associated with the meeting.
+
+  <ResponseField name="name" type="string">
+    Participant's full name.
+  </ResponseField>
+
+  <ResponseField name="email" type="string">
+    Participant's email address.
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp of when the meeting record was created.
+</ResponseField>
+
+### Example
+
+<CodeGroup>
+
+```bash cURL
+curl --request POST \
+  --url https://api.meetly.ai/v1/meetings \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "title": "Q3 Planning Sync",
+    "scheduled_at": "2024-01-15T09:00:00Z",
+    "participants": [
+      { "name": "Alice Johnson", "email": "alice@example.com" },
+      { "name": "Bob Carter",   "email": "bob@example.com" }
+    ],
+    "audio_url": "https://storage.example.com/recordings/q3-planning.mp3"
+  }'
+```
+
+```json Response
+{
+  "id": "mtg_01hx3k9p2w",
+  "title": "Q3 Planning Sync",
+  "status": "processing",
+  "scheduled_at": "2024-01-15T09:00:00Z",
+  "participants": [
+    { "name": "Alice Johnson", "email": "alice@example.com" },
+    { "name": "Bob Carter",   "email": "bob@example.com" }
+  ],
+  "created_at": "2024-01-15T08:55:12Z"
+}
+```
+
+</CodeGroup>
+
+---
+
+## List Meetings
+
+<api-endpoint method="GET" path="/v1/meetings" />
+
+Retrieve a paginated list of all meetings in your workspace. Use the `status` filter to narrow results, and the `cursor` parameter to page through large result sets.
+
+### Query Parameters
+
+<ParamField query="status" type="string">
+  Filter meetings by their current status. Accepted values: `scheduled`, `live`, `completed`, `processing`.
+</ParamField>
+
+<ParamField query="limit" type="integer">
+  Maximum number of meetings to return per page. Defaults to `20`. Maximum is `100`.
+</ParamField>
+
+<ParamField query="cursor" type="string">
+  Pagination cursor returned in the previous response's `next_cursor` field. Pass this value to retrieve the next page of results.
+</ParamField>
+
+### Response Fields
+
+<ResponseField name="data" type="array">
+  Array of meeting objects matching the query. Each object shares the same shape as the Create a Meeting response.
+</ResponseField>
+
+<ResponseField name="has_more" type="boolean">
+  `true` if additional pages of results exist beyond the current page.
+</ResponseField>
+
+<ResponseField name="next_cursor" type="string">
+  Opaque cursor string to pass as `cursor` in your next request. `null` when `has_more` is `false`.
+</ResponseField>
+
+### Example
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url "https://api.meetly.ai/v1/meetings?status=completed&limit=5" \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```
+
+```json Response
+{
+  "data": [
+    {
+      "id": "mtg_01hx3k9p2w",
+      "title": "Q3 Planning Sync",
+      "status": "completed",
+      "scheduled_at": "2024-01-15T09:00:00Z",
+      "participants": [
+        { "name": "Alice Johnson", "email": "alice@example.com" }
+      ],
+      "created_at": "2024-01-15T08:55:12Z"
+    },
+    {
+      "id": "mtg_01hw9m4r1v",
+      "title": "Design Review",
+      "status": "completed",
+      "scheduled_at": "2024-01-14T14:00:00Z",
+      "participants": [],
+      "created_at": "2024-01-14T13:50:00Z"
+    }
+  ],
+  "has_more": true,
+  "next_cursor": "cur_eyJpZCI6Im10Z18wMWh3OW00cjF2In0"
+}
+```
+
+</CodeGroup>
+
+---
+
+## Get a Meeting
+
+<api-endpoint method="GET" path="/v1/meetings/{id}" />
+
+Retrieve a single meeting by its unique identifier. The response includes references to any associated transcript and summary, as well as a count of extracted action items.
+
+### Path Parameters
+
+<ParamField path="id" type="string" required>
+  The unique identifier of the meeting to retrieve. Example: `"mtg_01hx3k9p2w"`.
+</ParamField>
+
+### Response Fields
+
+<ResponseField name="id" type="string">
+  Unique meeting identifier.
+</ResponseField>
+
+<ResponseField name="title" type="string">
+  The meeting's title.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Current meeting status. One of `scheduled`, `live`, `completed`, or `processing`.
+</ResponseField>
+
+<ResponseField name="scheduled_at" type="string">
+  ISO 8601 scheduled start time, or `null` if not set.
+</ResponseField>
+
+<ResponseField name="participants" type="array">
+  Array of `{ name, email }` participant objects.
+</ResponseField>
+
+<ResponseField name="transcript_id" type="string">
+  ID of the associated transcript, or `null` if transcription has not been started.
+</ResponseField>
+
+<ResponseField name="summary_id" type="string">
+  ID of the associated AI summary, or `null` if no summary has been generated.
+</ResponseField>
+
+<ResponseField name="action_item_count" type="integer">
+  Total number of action items extracted from this meeting.
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp of when the meeting record was created.
+</ResponseField>
+
+### Example
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url https://api.meetly.ai/v1/meetings/mtg_01hx3k9p2w \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```
+
+```json Response
+{
+  "id": "mtg_01hx3k9p2w",
+  "title": "Q3 Planning Sync",
+  "status": "completed",
+  "scheduled_at": "2024-01-15T09:00:00Z",
+  "participants": [
+    { "name": "Alice Johnson", "email": "alice@example.com" },
+    { "name": "Bob Carter",   "email": "bob@example.com" }
+  ],
+  "transcript_id": "tr_09gx2n5a3b",
+  "summary_id": "sum_7ky1p0qz8m",
+  "action_item_count": 4,
+  "created_at": "2024-01-15T08:55:12Z"
+}
+```
+
+</CodeGroup>
+
+---
+
+## Start Transcription
+
+<api-endpoint method="POST" path="/v1/meetings/{id}/transcribe" />
+
+Enqueue a transcription job for a meeting that already has an audio source attached. Transcription runs asynchronously — this endpoint returns immediately with a `processing` status.
+
+### Path Parameters
+
+<ParamField path="id" type="string" required>
+  The unique identifier of the meeting to transcribe. Example: `"mtg_01hx3k9p2w"`.
+</ParamField>
+
+### Request Body
+
+<ParamField body="language" type="string">
+  BCP-47 language code for the audio. Defaults to `"en"`. Example: `"fr"` for French.
+</ParamField>
+
+<ParamField body="speaker_detection" type="boolean">
+  When `true`, Meetly automatically identifies and labels individual speakers in the transcript. Defaults to `true`.
+</ParamField>
+
+### Response Fields
+
+<ResponseField name="meeting_id" type="string">
+  The ID of the meeting for which transcription was enqueued.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Always `"processing"` immediately after the job is queued.
+</ResponseField>
+
+<ResponseField name="estimated_completion" type="string">
+  ISO 8601 timestamp of the estimated time the transcript will be ready.
+</ResponseField>
+
+### Example
+
+<CodeGroup>
+
+```bash cURL
+curl --request POST \
+  --url https://api.meetly.ai/v1/meetings/mtg_01hx3k9p2w/transcribe \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "language": "en",
+    "speaker_detection": true
+  }'
+```
+
+```json Response
+{
+  "meeting_id": "mtg_01hx3k9p2w",
+  "status": "processing",
+  "estimated_completion": "2024-01-15T09:05:00Z"
+}
+```
+
+</CodeGroup>
+
+<Note>
+  Transcription is asynchronous. After calling this endpoint, poll `GET /v1/meetings/{id}` and check that `status` has changed to `"completed"`, or configure a webhook to receive a `transcription.completed` event automatically.
+</Note>

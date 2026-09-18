@@ -1,0 +1,94 @@
+---
+title: "AI Transcription: How Meetly Converts Speech to Text"
+sidebarTitle: "Transcription"
+description: "Meetly uses AI to transcribe meetings in real time or from uploaded recordings. Learn about transcription modes, accuracy, and supported formats."
+---
+
+Meetly's transcription engine converts your meeting audio into accurate, timestamped text using AI. Whether you're running a live video call or uploading a recorded file, Meetly produces a clean, speaker-labeled transcript that becomes the foundation for your summaries and action items.
+
+## Transcription Modes
+
+Meetly supports two transcription modes. Choose the one that fits your workflow.
+
+### Live Transcription
+
+Live transcription processes audio in real time as your meeting unfolds. To use it, invite the Meetly meeting bot to your video call — it joins as a participant, captures the audio stream, and delivers a rolling transcript that you can follow along with during the meeting itself. Live transcription is available for Zoom, Google Meet, and Microsoft Teams.
+
+### Upload Transcription
+
+If you already have a recorded meeting, upload the audio or video file directly to Meetly. The file is processed asynchronously, and you'll receive a webhook notification (or see the updated status via polling) when the transcript is ready. Upload transcription supports all the formats listed below.
+
+## Supported Formats
+
+Meetly accepts the following audio and video file formats for upload transcription.
+
+| Format | Extension | Notes |
+|---|---|---|
+| MP3 | `.mp3` | Most common audio format |
+| MP4 | `.mp4` | Video with audio track |
+| WAV | `.wav` | Uncompressed, highest quality |
+| M4A | `.m4a` | Apple audio format |
+| WEBM | `.webm` | Common browser recording format |
+| OGG | `.ogg` | Open-source audio format |
+
+The maximum file size for a single upload is **2 GB**. Files larger than this must be split before uploading.
+
+## Transcript Object
+
+When transcription completes, Meetly creates a Transcript object linked to your meeting. Here is a full example of its structure.
+
+```json
+{
+  "id": "txn_04kp2m8n1wra5t7g9cvh3ze6lq",
+  "meeting_id": "mtg_01hx9z3k7fqe2v8c4bnj6yd5rw",
+  "status": "completed",
+  "language": "en",
+  "segments": [
+    {
+      "speaker": "Speaker 1",
+      "start_ms": 0,
+      "end_ms": 4820,
+      "text": "Good morning everyone. Let's get started with the Q3 review."
+    },
+    {
+      "speaker": "Speaker 2",
+      "start_ms": 5100,
+      "end_ms": 9340,
+      "text": "Sounds good. I've pulled up the slides — can everyone see my screen?"
+    }
+  ],
+  "word_count": 4821,
+  "created_at": "2024-07-15T14:53:02Z"
+}
+```
+
+The `status` field follows this progression:
+
+- `processing` — the audio is being analyzed and transcribed.
+- `completed` — the transcript is ready and all segments are available.
+- `failed` — transcription could not be completed. Check the `error` field for details.
+
+## Speaker Identification
+
+Meetly automatically detects distinct voices in the audio and labels them as **Speaker 1**, **Speaker 2**, and so on. You don't need to configure anything for this to work.
+
+To assign real names to speakers, use the dashboard's speaker assignment panel after the transcript is generated, or send a `PATCH` request to `/v1/transcripts/{transcript_id}/speakers` with a mapping of speaker labels to names and email addresses. Once assigned, speaker names propagate through to the summary and action items.
+
+## Supported Languages
+
+Meetly can transcribe meetings in the following languages. Set the `language` field when creating a meeting or uploading a file to hint the transcription engine — if omitted, Meetly detects the language automatically.
+
+| Language | Code |
+|---|---|
+| English | `en` |
+| Spanish | `es` |
+| French | `fr` |
+| German | `de` |
+| Portuguese | `pt` |
+| Japanese | `ja` |
+| Chinese (Mandarin) | `zh` |
+| Italian | `it` |
+
+<Tip>
+  For best transcription accuracy, use a high-quality microphone and minimize background noise. Recordings with clear audio and minimal crosstalk between speakers consistently achieve the highest accuracy scores.
+</Tip>

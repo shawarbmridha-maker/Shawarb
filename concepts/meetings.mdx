@@ -1,0 +1,79 @@
+---
+title: "How Meetings Work in Meetly"
+sidebarTitle: "Meetings"
+description: "Understand the Meetly meeting lifecycle — from creation and scheduling through transcription, summarization, and archival."
+---
+
+The Meeting is the central object in Meetly. Every transcription, summary, and action item belongs to a meeting, and the entire workflow — from scheduling a call to reviewing your AI-generated notes — flows through it. Understanding how meetings are structured and how they progress through their lifecycle helps you get the most out of Meetly's automation.
+
+## Meeting Lifecycle
+
+A meeting moves through a predictable sequence of stages, from the moment you create it to the point where it's archived and ready for reference.
+
+<Steps>
+  <Step title="Create">
+    Create a meeting via the dashboard or the API. Set the title, scheduled time, and invite participants.
+  </Step>
+  <Step title="Schedule">
+    Meetly registers the meeting and, if configured, sends calendar invites to participants. The meeting status is set to `scheduled`.
+  </Step>
+  <Step title="Record / Upload">
+    When the meeting starts, the Meetly bot joins your video call for live recording — or you upload an audio/video file manually. The status transitions to `in_progress`.
+  </Step>
+  <Step title="Transcribe">
+    Meetly processes the audio and produces a timestamped, speaker-identified transcript. See [Transcription](/concepts/transcription) for details.
+  </Step>
+  <Step title="Summarize">
+    Once transcription completes, Meetly's AI generates a structured summary with key topics, decisions, and next steps. See [Summaries](/concepts/summaries) for details.
+  </Step>
+  <Step title="Review & Act">
+    Review the transcript, summary, and auto-extracted action items in the dashboard or via the API. The meeting status moves to `completed`, and later to `archived`.
+  </Step>
+</Steps>
+
+## Meeting Object
+
+Every meeting is represented by a JSON object. Here is a full example of the fields you'll encounter when working with the Meetly API.
+
+```json
+{
+  "id": "mtg_01hx9z3k7fqe2v8c4bnj6yd5rw",
+  "title": "Q3 Product Planning",
+  "status": "completed",
+  "scheduled_at": "2024-07-15T14:00:00Z",
+  "duration_seconds": 3240,
+  "participants": [
+    { "name": "Alice Chen", "email": "alice@example.com" },
+    { "name": "Ben Torres", "email": "ben@example.com" },
+    { "name": "Priya Nair", "email": "priya@example.com" }
+  ],
+  "transcript_id": "txn_04kp2m8n1wra5t7g9cvh3ze6lq",
+  "summary_id": "sum_09bj7r5x2dqf4u1m8nkw6yt3hv",
+  "action_item_count": 5,
+  "created_at": "2024-07-14T09:22:11Z",
+  "updated_at": "2024-07-15T15:05:47Z"
+}
+```
+
+## Meeting Statuses
+
+As a meeting progresses through its lifecycle, its `status` field reflects the current stage. Use this field to drive your own workflows and integrations.
+
+| Status | Description |
+|---|---|
+| `scheduled` | The meeting has been created and is waiting to start. No recording or transcription has begun. |
+| `in_progress` | The meeting is currently being recorded or an uploaded file is actively being processed. |
+| `completed` | Recording and processing are finished. The transcript, summary, and action items are available. |
+| `archived` | The meeting has been moved to the archive, either manually or automatically after the retention period. It remains readable but no further processing will occur. |
+
+## Participants
+
+Add participants to a meeting at creation time or at any point afterwards via the API. Each participant is identified by a `name` and `email` address.
+
+When a meeting reaches `completed` status, Meetly automatically emails each participant a copy of the summary if `email_notifications` is enabled on your account. You can override notification behavior per-meeting using the `notify_participants` flag on the meeting object.
+
+To add a participant after a meeting has been created, send a `POST` request to `/v1/meetings/{meeting_id}/participants` with the participant's name and email. Participants can also be removed before the meeting starts using a `DELETE` request to the same endpoint.
+
+<Note>
+  Meetings are retained for **90 days** on the Free plan and **indefinitely** on Pro and Enterprise plans. Once a meeting is deleted, its transcript, summary, and action items are permanently removed.
+</Note>

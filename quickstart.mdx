@@ -1,47 +1,91 @@
 ---
-title: "Quickstart"
-description: "Begin with a guide on the fastest path to a successful outcome"
+title: "Get Started with Meetly in Minutes"
+sidebarTitle: "Quickstart"
+description: "Set up Meetly, get your API key, and run your first meeting transcription in under 5 minutes with this step-by-step guide."
 ---
 
-Describe how someone begins using your product. What is the first thing they need to do? Are there any prerequisites?
+This guide takes you from zero to a working meeting transcription using the Meetly API. By the end, you'll have created a meeting, kicked off transcription, and retrieved a summary — all through a few straightforward API calls.
 
-A quickstart should take someone from zero to using your product. They'll get a quick win and a sense of what they can accomplish.
+<Note>
+  **Prerequisites**
 
-## Prerequisites
-
-Before you begin, you must have:
-
-- Requirement one (for example, Node.js 18+, a free account, an API key)
-- Requirement two (for example, a compatible device, a compatible browser, a compatible operating system)
-
-## Get started
+  - A Meetly account — sign up for free at [app.meetly.ai](https://app.meetly.ai) if you don't have one yet.
+  - A Meetly API key — you'll generate one in Step 2 below.
+</Note>
 
 <Steps>
-  <Step title="Install">
-    Describe how to install your product or sign up.
-
-    ```bash
-    npm install your-package
-    ```
+  <Step title="Create Your Account">
+    Go to [app.meetly.ai/signup](https://app.meetly.ai/signup) and create a free account. Fill in your name, work email, and password, then confirm your email address to activate your account.
   </Step>
-  <Step title="Configure">
-    Describe any setup or configuration needed before first use.
 
-    ```bash
-    your-cli init
-    ```
+  <Step title="Generate an API Key">
+    From your Meetly dashboard, navigate to **Settings → API Keys** and click **Create new key**. Give the key a descriptive name (for example, `my-first-key`) and click **Generate**.
+
+    Copy the key and store it somewhere secure — Meetly will **not** show it to you again. Production keys start with `mk_live_` and test keys start with `mk_test_`. Use a test key while you're exploring the API.
   </Step>
-  <Step title="Run it">
-    Show the first thing a user does to see it working.
 
-    ```bash
-    your-cli start
+  <Step title="Make Your First API Call">
+    Create a meeting by sending a `POST` request to `/v1/meetings`. Replace `YOUR_API_KEY` with the key you just generated.
+
+    <CodeGroup>
+      ```bash curl
+      curl -X POST https://api.meetly.ai/v1/meetings \
+        -H "Authorization: Bearer YOUR_API_KEY" \
+        -H "Content-Type: application/json" \
+        -d '{
+          "title": "Team Standup",
+          "scheduled_at": "2024-01-15T09:00:00Z"
+        }'
+      ```
+
+      ```python Python
+      import requests
+
+      API_KEY = "YOUR_API_KEY"
+
+      response = requests.post(
+          "https://api.meetly.ai/v1/meetings",
+          headers={
+              "Authorization": f"Bearer {API_KEY}",
+              "Content-Type": "application/json",
+          },
+          json={
+              "title": "Team Standup",
+              "scheduled_at": "2024-01-15T09:00:00Z",
+          },
+      )
+
+      meeting = response.json()
+      print(meeting)  # {"id": "mtg_abc123", "title": "Team Standup", ...}
+      ```
+    </CodeGroup>
+
+    A successful response returns a meeting object containing an `id` — save this, you'll need it in the next steps.
+  </Step>
+
+  <Step title="Start Transcription">
+    Kick off transcription for your meeting by sending a `POST` request to `/v1/meetings/{id}/transcribe`. Replace `MEETING_ID` with the `id` from the previous step.
+
+    ```bash curl
+    curl -X POST https://api.meetly.ai/v1/meetings/MEETING_ID/transcribe \
+      -H "Authorization: Bearer YOUR_API_KEY"
     ```
+
+    Meetly will begin processing the meeting audio. Transcription typically completes within a minute for a 30-minute meeting.
+  </Step>
+
+  <Step title="Get Your Summary">
+    Once transcription completes, fetch the full meeting object to read the summary and action items.
+
+    ```bash curl
+    curl https://api.meetly.ai/v1/meetings/MEETING_ID \
+      -H "Authorization: Bearer YOUR_API_KEY"
+    ```
+
+    The response includes a `summary` field with the AI-generated summary and an `action_items` array once processing is complete. If the `summary` field is `null`, transcription is still in progress — poll the endpoint every few seconds until it populates.
   </Step>
 </Steps>
 
 <Tip>
-  Give people a way to get help. This could be a link to a support page, a chat with a customer support agent, or a forum for your product.
-
-  Example: Need help? Reach out to us at [support@yourcompany.com](mailto:support@yourcompany.com).
+  Ready to go deeper? See the full [API Reference](/api-reference/overview) to explore every endpoint, request parameter, and response schema Meetly offers.
 </Tip>

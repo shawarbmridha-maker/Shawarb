@@ -1,0 +1,68 @@
+---
+title: "Meetly Account and Workspace Settings"
+sidebarTitle: "Settings"
+description: "Configure your Meetly workspace: notification preferences, default transcription language, AI summary style, team members, and data retention."
+---
+
+Meetly's settings let you customize transcription behavior, AI output style, notification preferences, and team access — all from the dashboard or via the API.
+
+## Workspace Settings
+
+Configure your workspace defaults from **Settings → Workspace** in the Meetly dashboard. These settings apply to all meetings in your workspace unless overridden at the meeting level.
+
+| Setting | Description |
+|---------|-------------|
+| **Default Language** | Language used for transcription when none is specified per meeting |
+| **Summary Style** | Default AI prompt style: `Concise`, `Detailed`, or `Executive Brief` |
+| **Auto-Transcribe** | Automatically start transcription as soon as a meeting ends |
+| **Email Notifications** | Send summaries and extracted action items to meeting participants after each meeting |
+| **Data Retention** | How long meeting data is stored: **Free** — 90 days · **Pro** — 1 year · **Enterprise** — custom |
+
+## Notification Settings
+
+Meetly can send email notifications for each of the following triggers. Enable or disable them individually from **Settings → Notifications**.
+
+| Trigger | Description |
+|---------|-------------|
+| **Meeting Completed** | Notifies you when Meetly finishes processing a meeting |
+| **Summary Ready** | Sent when the AI summary is available to view and share |
+| **Action Items Assigned** | Alerts assignees when an action item is attributed to them |
+| **Weekly Digest** | A weekly roll-up of meeting activity, summaries, and open action items |
+
+## Team Management
+
+Invite colleagues to your Meetly workspace from **Settings → Team → Invite**. Enter their email address and assign a role.
+
+| Role | Permissions |
+|------|-------------|
+| **Owner** | Full control over the workspace, billing, and all settings |
+| **Admin** | Manage team members, API keys, webhooks, and workspace settings |
+| **Member** | Access meetings, transcripts, summaries, and action items |
+| **Viewer** | Read-only access to meetings and summaries (cannot create or edit) |
+
+## Configuring Settings via API
+
+You can update workspace settings programmatically using the `PATCH /v1/settings` endpoint. This is useful for automated onboarding scripts and infrastructure-as-code workflows.
+
+```bash
+curl -X PATCH https://api.meetly.ai/v1/settings \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"default_language": "en", "auto_transcribe": true, "summary_style": "concise"}'
+```
+
+A successful response returns the updated settings object:
+
+```json
+{
+  "default_language": "en",
+  "auto_transcribe": true,
+  "summary_style": "concise",
+  "email_notifications": true,
+  "data_retention_days": 365
+}
+```
+
+<Tip>
+  Use the API to programmatically configure workspace settings when onboarding new team members or automating deployment. Combine it with your CI/CD pipeline to ensure consistent settings across staging and production workspaces.
+</Tip>

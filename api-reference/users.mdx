@@ -1,0 +1,127 @@
+---
+title: "Users API — Manage Your Meetly Account"
+sidebarTitle: "Users"
+description: "REST API reference for the Users resource. Retrieve your profile, update account settings, and manage workspace members."
+---
+
+The Users API provides access to your Meetly account details and workspace membership information. Use these endpoints to retrieve your current profile, programmatically update your display name or email, and integrate Meetly identity data into your own tooling or internal dashboards.
+
+---
+
+## Get Current User
+
+<api-endpoint method="GET" path="/v1/users/me" />
+
+Retrieve the profile of the authenticated user associated with the API key in your request. This is a convenient way to verify your credentials and inspect your current plan and workspace assignment.
+
+### Response Fields
+
+<ResponseField name="id" type="string">
+  Unique identifier for your user account. Example: `"usr_4mz7rq9kdn"`.
+</ResponseField>
+
+<ResponseField name="email" type="string">
+  The email address associated with your account. Example: `"alice@example.com"`.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Your display name as shown in the Meetly dashboard. Example: `"Alice Johnson"`.
+</ResponseField>
+
+<ResponseField name="plan" type="string">
+  Your current subscription plan. One of `free`, `pro`, or `enterprise`.
+</ResponseField>
+
+<ResponseField name="workspace_id" type="string">
+  The ID of the workspace your account belongs to. Example: `"ws_0pq6jt2hcl"`.
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp of when your account was created.
+</ResponseField>
+
+### Example
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url https://api.meetly.ai/v1/users/me \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```
+
+```json Response
+{
+  "id": "usr_4mz7rq9kdn",
+  "email": "alice@example.com",
+  "name": "Alice Johnson",
+  "plan": "pro",
+  "workspace_id": "ws_0pq6jt2hcl",
+  "created_at": "2023-09-04T11:22:30Z"
+}
+```
+
+</CodeGroup>
+
+---
+
+## Update Current User
+
+<api-endpoint method="PATCH" path="/v1/users/me" />
+
+Update your display name or email address. Only the fields you include in the request body will be changed — omitted fields remain as they are. If you update your email, a verification message will be sent to the new address before the change takes effect.
+
+### Request Body
+
+<ParamField body="name" type="string">
+  Your new display name. Example: `"Alice J. Johnson"`.
+</ParamField>
+
+<ParamField body="email" type="string">
+  Your new email address. Must be a valid email format. A verification email will be sent to confirm the change. Example: `"alice.johnson@example.com"`.
+</ParamField>
+
+### Response Fields
+
+The response is your full updated user object. See [Get Current User](#get-current-user) for the complete field reference.
+
+### Example
+
+<CodeGroup>
+
+```bash Update name
+curl --request PATCH \
+  --url https://api.meetly.ai/v1/users/me \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "name": "Alice J. Johnson"
+  }'
+```
+
+```bash Update email
+curl --request PATCH \
+  --url https://api.meetly.ai/v1/users/me \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "email": "alice.johnson@example.com"
+  }'
+```
+
+```json Response
+{
+  "id": "usr_4mz7rq9kdn",
+  "email": "alice@example.com",
+  "name": "Alice J. Johnson",
+  "plan": "pro",
+  "workspace_id": "ws_0pq6jt2hcl",
+  "created_at": "2023-09-04T11:22:30Z"
+}
+```
+
+</CodeGroup>
+
+<Note>
+  Email changes are not applied immediately. After you submit a new email address, Meetly sends a verification link to the new address. Your account email will continue to show the original address until the new one is confirmed.
+</Note>

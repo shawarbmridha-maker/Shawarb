@@ -1,0 +1,93 @@
+---
+title: "Managing API Keys for Meetly"
+sidebarTitle: "API Keys"
+description: "Create, manage, and revoke Meetly API keys from your dashboard. Learn key naming conventions, scopes, and rotation best practices."
+---
+
+API keys are the primary way to authenticate with the Meetly API. You can create multiple keys with different scopes and names to manage access across your team and integrations.
+
+## Key Naming Conventions
+
+Meetly API keys use a prefix to indicate their environment, so you can instantly tell a production key from a test key at a glance.
+
+| Prefix | Environment | Description |
+|--------|-------------|-------------|
+| `mk_live_` | Production | Live keys that operate against your real data |
+| `mk_test_` | Sandbox | Test keys that don't affect production data |
+
+<Note>
+  Use test keys (`mk_test_`) in development and CI/CD pipelines. Test keys operate against a sandboxed environment and will never modify or expose your production meeting data.
+</Note>
+
+## Creating an API Key
+
+<Steps>
+  <Step title="Sign in to your Meetly dashboard">
+    Go to [app.meetly.ai](https://app.meetly.ai) and sign in to your account.
+  </Step>
+  <Step title="Open API Keys settings">
+    Navigate to **Settings → API Keys**.
+  </Step>
+  <Step title="Create a new key">
+    Click **New API Key**.
+  </Step>
+  <Step title="Name your key">
+    Enter a descriptive name that identifies the key's purpose — for example, `Production Backend` or `CI Integration`.
+  </Step>
+  <Step title="Select the key type">
+    Choose **Live** for production use or **Test** for development and staging environments.
+  </Step>
+  <Step title="Save and copy the key">
+    Click **Create**, then copy your new key immediately. Meetly will **not** show the full key again after you leave this screen.
+  </Step>
+</Steps>
+
+## Key Scopes
+
+Scopes let you limit what each API key can do. Follow the principle of least privilege — grant only the scopes your integration actually needs.
+
+| Scope | Description |
+|-------|-------------|
+| `read:meetings` | Read meeting data and transcripts |
+| `write:meetings` | Create and update meetings |
+| `read:summaries` | Access AI-generated summaries |
+| `write:summaries` | Generate new summaries |
+| `read:action-items` | Read extracted action items |
+| `write:action-items` | Update action item status |
+| `admin` | Full access to all resources (use sparingly) |
+
+## Rotating Keys
+
+Key rotation is the process of replacing an existing API key with a new one without downtime. Follow these steps to rotate a key safely.
+
+<Steps>
+  <Step title="Create a new API key">
+    Follow the steps in [Creating an API Key](#creating-an-api-key) above to generate a fresh key with the same scopes as the one you're replacing.
+  </Step>
+  <Step title="Update your integration">
+    Deploy your updated application or integration with the new key. Verify that all calls are succeeding with the new key before proceeding.
+  </Step>
+  <Step title="Revoke the old key">
+    Once you've confirmed the new key is working, revoke the old key immediately (see [Revoking Keys](#revoking-keys) below).
+  </Step>
+</Steps>
+
+## Revoking Keys
+
+Revoke a key as soon as it is no longer needed or if you suspect it has been compromised.
+
+<Steps>
+  <Step title="Open API Keys settings">
+    Go to **Settings → API Keys** in your Meetly dashboard.
+  </Step>
+  <Step title="Select the key">
+    Click on the name of the key you want to revoke.
+  </Step>
+  <Step title="Revoke the key">
+    Click **Revoke** and confirm the action in the dialog.
+  </Step>
+</Steps>
+
+<Warning>
+  Revocation is **immediate and cannot be undone**. Any application still using a revoked key will receive `401 Unauthorized` errors. Make sure you have updated all integrations before revoking an active key.
+</Warning>

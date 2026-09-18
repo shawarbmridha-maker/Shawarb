@@ -1,0 +1,74 @@
+---
+title: "Usage Analytics: Track Meeting Insights with PostHog"
+sidebarTitle: "Analytics"
+description: "Meetly sends usage events to PostHog so you can track meeting activity, transcription usage, and team engagement across your organization."
+---
+
+Meetly integrates with PostHog to give you deep visibility into how your team uses meetings, transcriptions, and AI summaries. Every significant action in Meetly's AI pipeline emits a structured event to your PostHog project, so you can build dashboards, set up funnels, and identify trends without writing any custom tracking code.
+
+## How Analytics Works
+
+Events are sent to your PostHog project automatically when you include the `Helicone-Posthog-Key` and `Helicone-Posthog-Host` headers in your API requests. Meetly passes these headers through the Helicone proxy, which forwards the analytics payload to PostHog on your behalf. No separate PostHog SDK installation is required — configuration happens entirely at the request header level.
+
+## Configuring PostHog Integration
+
+Pass the PostHog headers as part of your OpenAI/Helicone client configuration. Meetly's PostHog project key and host are fixed values that you include verbatim:
+
+<Tabs>
+  <Tab title="Python">
+    ```python
+    import os
+    from openai import OpenAI
+
+    client = OpenAI(
+        api_key=os.environ["OPENAI_API_KEY"],
+        base_url="https://oai.hconeai.com/v1",
+        default_headers={
+            "Helicone-Auth": f"Bearer {os.environ['HELICONE_API_KEY']}",
+            "Helicone-Posthog-Key": "phc_tjQ8qsBPopAFLt9bwuxDAAnGWXJNBteVzFhXK7pwAPmD",
+            "Helicone-Posthog-Host": "https://us.i.posthog.com",
+        }
+    )
+    ```
+  </Tab>
+  <Tab title="JavaScript / TypeScript">
+    ```javascript
+    import OpenAI from "openai";
+
+    const client = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+      baseURL: "https://oai.hconeai.com/v1",
+      defaultHeaders: {
+        "Helicone-Auth": `Bearer ${process.env.HELICONE_API_KEY}`,
+        "Helicone-Posthog-Key": "phc_tjQ8qsBPopAFLt9bwuxDAAnGWXJNBteVzFhXK7pwAPmD",
+        "Helicone-Posthog-Host": "https://us.i.posthog.com",
+      },
+    });
+    ```
+  </Tab>
+</Tabs>
+
+The `Helicone-Posthog-Key` value (`phc_tjQ8qsBPopAFLt9bwuxDAAnGWXJNBteVzFhXK7pwAPmD`) identifies Meetly's PostHog project. The `Helicone-Posthog-Host` value (`https://us.i.posthog.com`) points to the US-region PostHog ingestion endpoint. Both values are the same for all Meetly users — you do not need to create your own PostHog account to receive analytics.
+
+## Tracked Events
+
+Meetly emits the following events to PostHog:
+
+| Event | Description |
+|---|---|
+| `meeting.created` | A new meeting was created |
+| `meeting.transcription_started` | Transcription began |
+| `meeting.transcription_completed` | Transcription finished successfully |
+| `meeting.summary_generated` | AI summary was generated |
+| `action_items.extracted` | Action items were extracted from a meeting |
+| `api.request` | An API request was made (includes endpoint, latency, and status) |
+
+Each event includes properties such as `meeting_id`, `user_id`, `timestamp`, and relevant context fields that make it easy to filter and segment in PostHog.
+
+## Viewing Analytics
+
+To view your events, log in to [PostHog](https://us.i.posthog.com) and navigate to **Events** in the left sidebar. Filter by event name (for example, `meeting.summary_generated`) to see a time-series breakdown. You can also use **Insights** to build charts, **Funnels** to analyze multi-step flows, and **Cohorts** to segment users by behavior.
+
+<Tip>
+  Use PostHog funnels to analyze your team's meeting-to-action-item conversion rate. Set `meeting.created` as the first step and `action_items.extracted` as the final step to see how consistently meetings are resulting in tracked next actions.
+</Tip>
