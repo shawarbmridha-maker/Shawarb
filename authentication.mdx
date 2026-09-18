@@ -1,7 +1,7 @@
 ---
-title: "Authenticate with the Meetly API"
+title: "Meetly API Authentication: Keys, Headers, and Errors"
 sidebarTitle: "Authentication"
-description: "Meetly uses API key authentication. Learn how to generate keys, pass them in requests, and handle authentication errors."
+description: "Learn how to authenticate Meetly API requests using Bearer tokens, understand mk_live_ and mk_test_ key prefixes, and resolve auth errors."
 ---
 
 Meetly authenticates all API requests using API keys passed in the `Authorization` header. Every request you make to the Meetly API must include a valid key — requests without one are rejected immediately, before any business logic runs.

@@ -1,7 +1,7 @@
 ---
-title: "Automatic Action Item Extraction with Meetly"
+title: "Action Items: AI Extraction, Review, and Integrations"
 sidebarTitle: "Action Items"
-description: "Meetly's AI automatically identifies and extracts action items from your meetings, assigning owners and due dates where possible."
+description: "Meetly automatically extracts action items from meeting transcripts, assigning owners and due dates so your team can act on every commitment."
 ---
 
 Meetly analyzes your meeting transcript to automatically identify tasks, commitments, and follow-ups — so nothing slips through the cracks. As soon as a summary is generated, action items are extracted and made available in the dashboard and via the API, ready to be reviewed, edited, or pushed to your project management tools.
@@ -48,7 +48,8 @@ Review all extracted action items from the **Action Items** tab on the meeting d
 
 Items with a `confidence` score of `low` are automatically flagged with a warning indicator, prompting you to verify them before they're treated as confirmed tasks. You can also retrieve and update action items programmatically:
 
-- `GET /v1/meetings/{meeting_id}/action-items` — list all action items for a meeting.
+- `GET /v1/action-items` — list action items across all meetings (supports filtering by `status`, `assignee_email`, and `meeting_id` query parameters).
+- `GET /v1/meetings/{meeting_id}/action-items` — list all action items for a specific meeting.
 - `PATCH /v1/action-items/{action_item_id}` — update the text, assignee, due date, or status.
 - `DELETE /v1/action-items/{action_item_id}` — remove an incorrectly extracted item.
 
